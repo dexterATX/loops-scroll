@@ -8,12 +8,16 @@ interface LenisContextValue {
   lenis: Lenis | null
   isReady: boolean
   scrollTo: (target: string | HTMLElement | number, options?: { offset?: number; duration?: number }) => void
+  enableScroll: () => void
+  disableScroll: () => void
 }
 
 const LenisContext = createContext<LenisContextValue>({
   lenis: null,
   isReady: false,
-  scrollTo: () => {}
+  scrollTo: () => {},
+  enableScroll: () => {},
+  disableScroll: () => {}
 })
 
 export function useLenis() {
@@ -103,12 +107,15 @@ export default function LenisProvider({ children }: LenisProviderProps) {
           gsap.ticker.remove(tickerUpdate)
         }
 
+        // Start with scrolling disabled - will be enabled after hero animation
+        lenis.stop()
+
         // Set state to trigger context update - this makes lenis available to consumers
         setLenisInstance(lenis)
         setIsReady(true)
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('Lenis initialized with GSAP ScrollTrigger')
+          console.log('Lenis initialized with GSAP ScrollTrigger (scrolling disabled until hero completes)')
         }
       })
       .catch((err) => {
@@ -155,12 +162,28 @@ export default function LenisProvider({ children }: LenisProviderProps) {
     }
   }, [lenisInstance])
 
+  // Enable scrolling (call after hero animation completes)
+  const enableScroll = useCallback(() => {
+    if (lenisInstance) {
+      lenisInstance.start()
+    }
+  }, [lenisInstance])
+
+  // Disable scrolling
+  const disableScroll = useCallback(() => {
+    if (lenisInstance) {
+      lenisInstance.stop()
+    }
+  }, [lenisInstance])
+
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<LenisContextValue>(() => ({
     lenis: lenisInstance,
     isReady,
-    scrollTo
-  }), [lenisInstance, isReady, scrollTo])
+    scrollTo,
+    enableScroll,
+    disableScroll
+  }), [lenisInstance, isReady, scrollTo, enableScroll, disableScroll])
 
   // Show error state if initialization failed
   if (error) {

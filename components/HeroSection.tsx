@@ -26,7 +26,7 @@ export default function HeroSection({
   const scrollIndicatorRef = useRef<HTMLDivElement>(null)
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
   const [animationComplete, setAnimationComplete] = useState(false)
-  const { isReady: lenisReady } = useLenis()
+  const { isReady: lenisReady, enableScroll } = useLenis()
 
   useEffect(() => {
     if (!lenisReady || !containerRef.current || !wordsContainerRef.current) return
@@ -70,6 +70,7 @@ export default function HeroSection({
       const tl = gsap.timeline({
         onComplete: () => {
           setAnimationComplete(true)
+          enableScroll() // Enable scrolling after hero animation completes
           onAnimationComplete?.()
         },
       })
@@ -147,7 +148,7 @@ export default function HeroSection({
     return () => {
       ctx.revert()
     }
-  }, [lenisReady])
+  }, [lenisReady, enableScroll])
 
   // Scroll indicator line animation
   useEffect(() => {
@@ -192,7 +193,7 @@ export default function HeroSection({
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+      <div className="relative z-[500] w-full h-full flex flex-col items-center justify-center">
         {/* Subtitle - positioned above words, centered */}
         <div
           ref={subtitleRef}

@@ -25,8 +25,9 @@ if (typeof window !== 'undefined') {
 }
 
 export default function Navigation({ scrollToData, waitForHero = false, heroComplete = false }: NavigationProps) {
-  const [activeSection, setActiveSection] = useState<string>('')
-  const [clickedSection, setClickedSection] = useState<string>('')
+  const [activeSection, setActiveSection] = useState<string>('section-intro')
+  const [clickedSection, setClickedSection] = useState<string>('section-intro')
+  const [expandedSection, setExpandedSection] = useState<string>('')
   const [isRevealed, setIsRevealed] = useState(false)
   const [sectionProgress, setSectionProgress] = useState<Record<string, number>>({})
   const headerRef = useRef<HTMLElement>(null)
@@ -99,10 +100,13 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
 
           // Calculate progress within current section
           const sectionProgress = (progress * horizontalSections.length) % 1
-          setSectionProgress(prev => ({
-            ...prev,
-            [activeHorizontalSection.id]: sectionProgress * 100
-          }))
+
+          // Reset ALL section progress (including vertical) and set current one
+          const newProgress: Record<string, number> = {}
+          sections.forEach(s => {
+            newProgress[s.id] = s.id === activeHorizontalSection.id ? sectionProgress * 100 : 0
+          })
+          setSectionProgress(newProgress)
         }
       }
     }
@@ -131,10 +135,12 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
 
             if (isVertical && horizontalComplete) {
               setActiveSection(id)
-              setSectionProgress(prev => ({
-                ...prev,
-                [id]: 100
-              }))
+              // Reset all progress and set current to 100
+              const newProgress: Record<string, number> = {}
+              sections.forEach(s => {
+                newProgress[s.id] = s.id === id ? 100 : 0
+              })
+              setSectionProgress(newProgress)
             }
           }
         })
@@ -169,8 +175,11 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
       clearTimeout(timeoutRef.current)
     }
 
-    // Show expanded state
+    // Highlight clicked section
     setClickedSection(sectionId)
+
+    // Temporarily expand clicked section, it will collapse after delay
+    setExpandedSection(sectionId)
 
     // Check if this is a horizontal section
     const isHorizontal = element.getAttribute('data-scroll-to') === 'horizontal'
@@ -186,8 +195,11 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
 
         if (trigger && sectionIndex >= 0) {
           // Calculate target scroll position
+          // For N sections, progress should be: 0, 1/(N-1), 2/(N-1), ..., 1
           const totalSections = allHorizontalSections.length
-          const targetProgress = sectionIndex / totalSections
+          const targetProgress = totalSections > 1
+            ? sectionIndex / (totalSections - 1)
+            : 0
           const scrollStart = trigger.start
           const scrollEnd = trigger.end
           const targetScroll = scrollStart + (scrollEnd - scrollStart) * targetProgress
@@ -200,14 +212,27 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
       scrollTo(element, { offset: 0, duration: 1.2 })
     }
 
-    // Revert after delay with mount check
+    // Collapse text after delay, but keep highlighted
     timeoutRef.current = setTimeout(() => {
       if (isMountedRef.current) {
-        setClickedSection('')
+        setExpandedSection('')
       }
       timeoutRef.current = null
     }, 1200)
   }, [scrollTo])
+
+  // Sync clickedSection with activeSection when scrolling
+  // This ensures the highlight follows the current visible section
+  useEffect(() => {
+    setClickedSection(activeSection)
+    // Clear any pending timeout when section changes via scroll
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+    // Collapse all sections when scrolling
+    setExpandedSection('')
+  }, [activeSection])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -244,6 +269,7 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
           const sectionId = item.href?.replace('#', '') || ''
           const isActive = activeSection === sectionId
           const isClicked = clickedSection === sectionId
+          const isExpanded = expandedSection === sectionId
           const progress = sectionProgress[sectionId] ?? (isActive ? 100 : 0)
 
           return (
@@ -251,7 +277,7 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
               key={item.id}
               href={item.href}
               onClick={(e) => handleClick(e, item.href)}
-              className={`nav-scroll-item ${isActive ? 'nav-active' : ''} ${isClicked ? 'nav-clicked' : ''}`}
+              className={`nav-scroll-item ${isActive ? 'nav-active' : ''} ${isClicked ? 'nav-clicked' : ''} ${isExpanded ? 'nav-expanded' : ''}`}
               aria-current={isActive ? 'true' : undefined}
             >
               <div className="nav-scroll-content">

@@ -151,10 +151,10 @@ body {
   cursor: pointer;
   text-decoration: none;
   flex: 0 0 auto;
-  height: 5rem;
+  padding: 1.75rem 0;
   width: 100%;
   background-color: #0a0a0a;
-  transition: height 0.3s ease, background-color 0.3s ease;
+  transition: padding 1.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
 }
 
 .nav-scroll-item::after {
@@ -172,7 +172,8 @@ body {
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  transform: rotate(90deg);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
 
 .nav-scroll-id {
@@ -186,12 +187,12 @@ body {
 }
 
 .nav-scroll-text {
-  width: 0;
-  max-width: 0;
   overflow: hidden;
   opacity: 0;
-  transition: width 0.4s ease, opacity 0.3s ease;
+  visibility: hidden;
   white-space: nowrap;
+  max-height: 0;
+  transition: opacity 0.3s ease, max-height 0.4s ease, visibility 0s ease 0.3s;
 }
 
 .nav-scroll-text span {
@@ -215,14 +216,14 @@ body {
 
 /* Hover State */
 .nav-scroll-item:hover {
-  height: 10rem;
+  padding: 1.25rem 0;
 }
 
 .nav-scroll-item:hover .nav-scroll-text {
-  width: auto !important;
-  max-width: 10rem !important;
-  opacity: 1 !important;
-  transition: width 0.4s ease 0.1s, max-width 0.4s ease 0.1s, opacity 0.3s ease 0.2s;
+  opacity: 1;
+  visibility: visible;
+  max-height: 10rem;
+  transition: opacity 0.5s ease 0.15s, max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s ease 0s;
 }
 
 .nav-scroll-item:hover .nav-scroll-id,
@@ -230,40 +231,12 @@ body {
   color: #ef4444;
 }
 
-/* Active State - keeps compact, only indicator shows */
-.nav-scroll-item.nav-active:not(.nav-clicked):not(:hover) {
-  height: 5rem;
-}
-
-.nav-scroll-item.nav-active:not(.nav-clicked):not(:hover) .nav-scroll-text {
-  width: 0;
-  max-width: 0;
-  opacity: 0;
-}
-
-/* Clicked/Expanded state - takes priority */
-.nav-scroll-item.nav-clicked {
-  height: 10rem;
-}
-
-.nav-scroll-item.nav-clicked .nav-scroll-text {
-  width: auto !important;
-  max-width: 10rem !important;
-  opacity: 1 !important;
-  transition: width 0.4s ease, max-width 0.4s ease, opacity 0.3s ease;
-}
-
-.nav-scroll-item.nav-active .nav-scroll-id,
-.nav-scroll-item.nav-active .nav-scroll-text span {
+/* Clicked/Highlighted state - shows bar and red text */
+.nav-scroll-item.nav-clicked .nav-scroll-id {
   color: #ef4444;
 }
 
-.nav-scroll-item.nav-active .nav-scroll-text {
-  width: auto;
-  opacity: 1;
-}
-
-.nav-scroll-item.nav-active::before {
+.nav-scroll-item.nav-clicked::before {
   content: '';
   position: absolute;
   left: 0;
@@ -271,6 +244,22 @@ body {
   width: 2px;
   height: 100%;
   background-color: #ef4444;
+}
+
+/* Expanded state - shows text */
+.nav-scroll-item.nav-expanded {
+  padding: 1.25rem 0;
+}
+
+.nav-scroll-item.nav-expanded .nav-scroll-text {
+  opacity: 1;
+  visibility: visible;
+  max-height: 10rem;
+  transition: opacity 0.5s ease 0.15s, max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s ease 0s;
+}
+
+.nav-scroll-item.nav-expanded .nav-scroll-text span {
+  color: #ef4444;
 }
 
 /* Tablet - horizontal top nav */
@@ -394,12 +383,11 @@ body {
   }
 
   .nav-scroll-item {
-    height: 2.5rem;
+    padding: 0.75rem 0;
   }
 
   .nav-scroll-content {
     padding: 0.25rem;
-    transform: rotate(90deg);
   }
 
   .nav-scroll-id {
