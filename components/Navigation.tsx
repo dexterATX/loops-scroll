@@ -226,7 +226,18 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
       role="banner"
     >
       <Link href="/" className="nav-logo" aria-label="Home">
-        <span className="nav-logo-mark" aria-hidden="true">T</span>
+        <svg
+          className="nav-logo-mark"
+          viewBox="0 0 40 36"
+          fill="none"
+          aria-hidden="true"
+        >
+          {/* Sharp angular T - wider proportions */}
+          <path
+            d="M0 0H40L37 8H24V36H16V8H3L0 0Z"
+            fill="currentColor"
+          />
+        </svg>
       </Link>
       <nav className="nav-scroll-list" role="navigation" aria-label="Section navigation">
         {scrollToData.map((item) => {

@@ -40,8 +40,8 @@ export default function Home() {
         >
           <HeroSection
             words={['EDUCATOR', 'COACH', 'MENTOR', 'CONSULTANT']}
-            subtitle="Design mentorship"
-            author="by Won J. You"
+            subtitle="Elite football coaching"
+            author="by Tyus S."
             onAnimationComplete={handleHeroComplete}
           />
         </section>

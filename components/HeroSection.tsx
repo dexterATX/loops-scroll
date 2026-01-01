@@ -149,18 +149,30 @@ export default function HeroSection({
     }
   }, [lenisReady])
 
-  // Scroll indicator pulse animation
+  // Scroll indicator line animation
   useEffect(() => {
     if (!animationComplete || !scrollIndicatorRef.current) return
 
     const ctx = gsap.context(() => {
-      gsap.to('.scroll-line', {
-        scaleX: 1.5,
-        duration: 1,
-        ease: 'power1.inOut',
-        repeat: -1,
-        yoyo: true,
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.5 })
+
+      // Draw line from left to right
+      tl.to('.arrow-line', {
+        scaleX: 1,
+        duration: 0.6,
+        ease: 'power2.out',
       })
+      // Pause briefly
+      .to({}, { duration: 0.3 })
+      // Retract from left
+      .set('.arrow-line', { transformOrigin: 'right' })
+      .to('.arrow-line', {
+        scaleX: 0,
+        duration: 0.6,
+        ease: 'power2.in',
+      })
+      // Reset for next loop
+      .set('.arrow-line', { transformOrigin: 'left' })
     }, scrollIndicatorRef)
 
     return () => ctx.revert()
@@ -212,15 +224,15 @@ export default function HeroSection({
           ))}
         </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator - bottom left, aligned with words */}
         <div
           ref={scrollIndicatorRef}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4"
+          className="absolute bottom-12 left-[6.5rem] flex items-center gap-3"
         >
-          <span className="text-xs md:text-sm text-zinc-400 tracking-widest uppercase">
+          <span className="text-xs font-bold text-white tracking-widest uppercase">
             Scroll to discover
           </span>
-          <div className="scroll-line w-12 h-[2px] bg-zinc-400 origin-left" />
+          <div className="arrow-line w-20 h-[2px] bg-white origin-left scale-x-0" />
         </div>
       </div>
     </div>
