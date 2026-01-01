@@ -20,10 +20,10 @@ npm run start
 npm run lint
 
 # Unit tests (Vitest)
-npm test              # Run once
-npm test -- path/to/file.test.tsx  # Run single test file
-npm run test:ui      # Interactive UI
-npm run test:coverage # Coverage report
+npm test                                    # Run once
+npm test -- components/HeroSection.test.tsx # Run single test file
+npm run test:ui                             # Interactive UI
+npm run test:coverage                       # Coverage report
 
 # E2E tests (Playwright)
 npm run test:e2e     # Run E2E tests
@@ -53,15 +53,26 @@ The page scrolls **horizontally** for the first N sections, then transitions to 
 app/layout.tsx
 ├── LenisProvider (smooth scroll context)
     └── app/page.tsx
-        ├── Navigation (sticky nav with scroll-to links)
-        ├── HorizontalScroll (horizontal sections)
-        │   ├── section-intro (data-scroll-to="horizontal")
-        │   └── section-philosophy (data-scroll-to="horizontal")
+        ├── Navigation (sticky left sidebar with scroll-to links)
+        ├── HorizontalScroll (horizontal sections wrapper)
+        │   ├── HeroSection (animated word reveal + video background)
+        │   └── PhilosophySection (Dither background + stats)
         └── VerticalSection components (normal flow)
             ├── section-experience
             ├── section-achievements
             └── ...
 ```
+
+### Key Visual Components
+
+**Dither** (`components/Dither.tsx`):
+- Three.js Canvas with custom GLSL shaders for wave/dither effect
+- Uses `@react-three/fiber` and `@react-three/postprocessing`
+- `wrapEffect()` must be called outside component to avoid recreating effect on each render
+
+**ShinyText** (`components/ShinyText.tsx`):
+- Framer Motion animated text with gradient shine effect
+- Uses `backgroundClip: 'text'` with transparent text fill
 
 ### GSAP + Lenis Integration
 
@@ -89,6 +100,10 @@ Lenis smooth scroll drives GSAP ScrollTrigger updates:
 - Uses `isMounted` flag to prevent cleanup after unmount
 - Stores ticker remover function in ref for proper cleanup
 - Dynamic imports handled with proper error catching
+
+**Animation triggers:**
+- Use refs instead of state for synchronous checks in ticker callbacks (prevents race conditions)
+- Example: `hasAnimatedRef.current = true` instead of `setHasAnimated(true)`
 
 ## Testing
 
