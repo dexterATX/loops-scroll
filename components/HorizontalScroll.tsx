@@ -19,7 +19,7 @@ export default function HorizontalScroll({ children }: HorizontalScrollProps) {
   const innerRef = useRef<HTMLDivElement>(null)
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
   const ctxRef = useRef<gsap.Context | null>(null)
-  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMountedRef = useRef(true)
   const { isReady: lenisReady } = useLenis()
 
@@ -88,8 +88,10 @@ export default function HorizontalScroll({ children }: HorizontalScrollProps) {
       }
 
       try {
-        // Create GSAP context for proper cleanup - store in ref immediately
-        ctxRef.current = gsap.context(() => {
+        // Create GSAP context for proper cleanup
+        let createdScrollTrigger: ScrollTrigger | null = null
+
+        const ctx = gsap.context(() => {
           // Double check mount status inside context callback
           if (!isMountedRef.current) return
 
@@ -112,13 +114,22 @@ export default function HorizontalScroll({ children }: HorizontalScrollProps) {
             },
           })
 
-          // Store reference for cleanup
-          scrollTriggerRef.current = tween.scrollTrigger || null
+          // Capture the scrollTrigger for ref assignment
+          createdScrollTrigger = tween.scrollTrigger || null
 
           if (process.env.NODE_ENV === 'development') {
             console.log('GSAP ScrollTrigger created for horizontal scroll')
           }
         }, container)
+
+        // Check mount status and assign refs AFTER context callback completes
+        if (isMountedRef.current) {
+          ctxRef.current = ctx
+          scrollTriggerRef.current = createdScrollTrigger
+        } else {
+          // Component unmounted during context creation, clean up immediately
+          ctx.revert()
+        }
 
         // Add resize handler
         window.addEventListener('resize', handleResize)
@@ -153,17 +164,14 @@ export default function HorizontalScroll({ children }: HorizontalScrollProps) {
       // Remove resize listener
       window.removeEventListener('resize', handleResize)
 
-      // Kill specific ScrollTrigger
-      if (scrollTriggerRef.current) {
-        scrollTriggerRef.current.kill()
-        scrollTriggerRef.current = null
-      }
-
-      // Revert GSAP context - use ref to ensure we have the correct reference
+      // Revert GSAP context FIRST - this kills ScrollTrigger automatically
       if (ctxRef.current) {
         ctxRef.current.revert()
         ctxRef.current = null
       }
+
+      // Nullify ScrollTrigger ref (already killed by ctx.revert())
+      scrollTriggerRef.current = null
 
       if (process.env.NODE_ENV === 'development') {
         console.log('HorizontalScroll: Cleanup complete')
@@ -176,6 +184,8 @@ export default function HorizontalScroll({ children }: HorizontalScrollProps) {
       ref={containerRef}
       className="relative"
       style={{ height: '100vh', overflow: 'hidden' }}
+      role="region"
+      aria-label="Horizontal scroll section"
     >
       <div
         ref={innerRef}

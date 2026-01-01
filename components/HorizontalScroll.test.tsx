@@ -7,12 +7,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // Mock the useLenis hook
 const mockScrollTo = vi.fn()
+const mockEnableScroll = vi.fn()
+const mockDisableScroll = vi.fn()
 const mockLenis = {
   on: vi.fn(),
   off: vi.fn(),
   raf: vi.fn(),
   destroy: vi.fn(),
   scrollTo: vi.fn(),
+  start: vi.fn(),
+  stop: vi.fn(),
 }
 
 describe('HorizontalScroll', () => {
@@ -22,6 +26,8 @@ describe('HorizontalScroll', () => {
       lenis: mockLenis as any,
       isReady: true,
       scrollTo: mockScrollTo,
+      enableScroll: mockEnableScroll,
+      disableScroll: mockDisableScroll,
     })
 
     // Mock window.innerWidth
@@ -99,6 +105,8 @@ describe('HorizontalScroll', () => {
       lenis: null,
       isReady: false,
       scrollTo: mockScrollTo,
+      enableScroll: mockEnableScroll,
+      disableScroll: mockDisableScroll,
     })
 
     const { container } = render(

@@ -181,7 +181,7 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: #666;
+  color: #888;
   transition: color 0.3s ease;
   text-transform: uppercase;
 }
@@ -200,7 +200,7 @@ body {
   font-weight: 800 !important;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #666;
+  color: #888;
 }
 
 .nav-scroll-progress {
@@ -262,6 +262,19 @@ body {
   color: #ef4444;
 }
 
+/* Active state for desktop - shows red text */
+.nav-scroll-item.nav-active .nav-scroll-id {
+  color: #ef4444;
+}
+
+/* Focus visible styles for accessibility */
+.nav-scroll-item:focus-visible,
+.nav-logo:focus-visible,
+.nav-connect-btn:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
 /* Tablet - horizontal top nav */
 @media (max-width: 999px) {
   .nav-header {
@@ -292,6 +305,7 @@ body {
     gap: 0.1rem;
     justify-content: center;
     transform: none;
+    writing-mode: horizontal-tb;
   }
 
   .nav-scroll-id,
@@ -327,12 +341,16 @@ body {
 .hero-word {
   overflow: visible;
   will-change: transform;
-  outline: none !important;
   border: none !important;
   background: transparent !important;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   box-shadow: none !important;
+}
+
+.hero-word:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
 }
 
 .hero-text {
@@ -408,5 +426,75 @@ body {
   .nav-connect-btn {
     height: 8rem !important;
     min-height: 8rem !important;
+  }
+}
+
+/* Accessibility: Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Pause background videos for reduced motion */
+  video[autoplay] {
+    animation: none !important;
+  }
+}
+
+/* Hero background video styles */
+.hero-video {
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* ===== SUBTLE EMBER SPARKS ===== */
+
+/* Tiny glowing spark - like fireplace embers */
+.ember-spark {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background: #fbbf24;
+  box-shadow:
+    0 0 2px 0.5px rgba(251, 191, 36, 0.9),
+    0 0 4px 1px rgba(249, 115, 22, 0.6),
+    0 0 8px 2px rgba(239, 68, 68, 0.3);
+}
+
+/* Slightly brighter variant */
+.ember-spark:nth-child(3n) {
+  background: #fcd34d;
+  box-shadow:
+    0 0 2px 0.5px rgba(252, 211, 77, 0.95),
+    0 0 5px 1px rgba(251, 191, 36, 0.7),
+    0 0 10px 2px rgba(249, 115, 22, 0.35);
+}
+
+/* Warmer orange variant */
+.ember-spark:nth-child(4n) {
+  background: #fb923c;
+  box-shadow:
+    0 0 2px 0.5px rgba(251, 146, 60, 0.9),
+    0 0 4px 1px rgba(239, 68, 68, 0.5),
+    0 0 8px 2px rgba(220, 38, 38, 0.25);
+}
+
+/* Subtle red variant */
+.ember-spark:nth-child(5n) {
+  background: #f87171;
+  box-shadow:
+    0 0 2px 0.5px rgba(248, 113, 113, 0.85),
+    0 0 4px 1px rgba(239, 68, 68, 0.5),
+    0 0 6px 2px rgba(185, 28, 28, 0.25);
+}
+
+/* Accessibility: Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .ember-spark {
+    display: none !important;
   }
 }

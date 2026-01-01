@@ -5,12 +5,16 @@ import * as LenisProvider from '@/providers/LenisProvider'
 
 // Mock the useLenis hook
 const mockScrollTo = vi.fn()
+const mockEnableScroll = vi.fn()
+const mockDisableScroll = vi.fn()
 const mockLenis = {
   on: vi.fn(),
   off: vi.fn(),
   raf: vi.fn(),
   destroy: vi.fn(),
   scrollTo: vi.fn(),
+  start: vi.fn(),
+  stop: vi.fn(),
 }
 
 describe('HeroSection', () => {
@@ -19,6 +23,8 @@ describe('HeroSection', () => {
       lenis: mockLenis as any,
       isReady: true,
       scrollTo: mockScrollTo,
+      enableScroll: mockEnableScroll,
+      disableScroll: mockDisableScroll,
     })
   })
 
@@ -93,6 +99,8 @@ describe('HeroSection', () => {
         lenis: null,
         isReady: false,
         scrollTo: mockScrollTo,
+        enableScroll: mockEnableScroll,
+        disableScroll: mockDisableScroll,
       })
     })
 

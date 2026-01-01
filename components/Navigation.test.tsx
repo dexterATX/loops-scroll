@@ -13,6 +13,8 @@ const mockScrollToData = [
 ]
 
 const mockScrollTo = vi.fn()
+const mockEnableScroll = vi.fn()
+const mockDisableScroll = vi.fn()
 
 describe('Navigation', () => {
   beforeEach(() => {
@@ -23,6 +25,8 @@ describe('Navigation', () => {
       lenis: null,
       isReady: true,
       scrollTo: mockScrollTo,
+      enableScroll: mockEnableScroll,
+      disableScroll: mockDisableScroll,
     })
 
     // Create mock sections in the DOM
@@ -80,10 +84,12 @@ describe('Navigation', () => {
   it('should render logo at top with accessibility label', () => {
     const { container } = render(<Navigation scrollToData={mockScrollToData} />)
 
-    expect(screen.getByText('T')).toBeInTheDocument()
     const logo = container.querySelector('.nav-logo')
     expect(logo).toBeInTheDocument()
     expect(logo).toHaveAttribute('aria-label', 'Home')
+    // Logo is now an SVG, check for the svg element
+    const logoSvg = container.querySelector('.nav-logo-mark')
+    expect(logoSvg).toBeInTheDocument()
   })
 
   it('should have correct href links', () => {

@@ -5,6 +5,7 @@ import HorizontalScroll from '@/components/HorizontalScroll'
 import VerticalSection from '@/components/VerticalSection'
 import Navigation from '@/components/Navigation'
 import HeroSection from '@/components/HeroSection'
+import PhilosophySection from '@/components/PhilosophySection'
 
 const scrollToData = [
   { id: 'I.', text: 'Intro', href: '#section-intro' },
@@ -35,6 +36,7 @@ export default function Home() {
         {/* Hero Section with animated words */}
         <section
           id="section-intro"
+          aria-label="Introduction"
           data-scroll-to="horizontal"
           className="h-screen w-screen flex-shrink-0 bg-zinc-900"
         >
@@ -46,36 +48,25 @@ export default function Home() {
           />
         </section>
 
-        {/* Philosophy Section - last horizontal section */}
-        <section
-          id="section-philosophy"
-          data-scroll-to="horizontal"
-          className="h-screen w-screen flex-shrink-0 flex items-center justify-center bg-zinc-800"
-        >
-          <div className="max-w-4xl px-8 text-center">
-            <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-8">Philosophy</h2>
-            <p className="text-xl md:text-2xl text-zinc-400 leading-relaxed">
-              Design is not just what it looks like and feels like. Design is how it works.
-            </p>
-          </div>
-        </section>
+        {/* Philosophy Section */}
+        <PhilosophySection />
       </HorizontalScroll>
 
       {/* Vertical Sections - scroll normally after horizontal completes */}
       <VerticalSection id="section-experience" className="bg-zinc-800">
-        <h1 className="text-8xl font-bold">EXPERIENCE</h1>
+        <h2 className="text-8xl font-bold">EXPERIENCE</h2>
       </VerticalSection>
 
       <VerticalSection id="section-achievements" className="bg-zinc-700">
-        <h1 className="text-8xl font-bold">ACHIEVEMENTS</h1>
+        <h2 className="text-8xl font-bold">ACHIEVEMENTS</h2>
       </VerticalSection>
 
       <VerticalSection id="section-programs" className="bg-zinc-600">
-        <h1 className="text-8xl font-bold">PROGRAMS</h1>
+        <h2 className="text-8xl font-bold">PROGRAMS</h2>
       </VerticalSection>
 
       <VerticalSection id="section-contact" className="bg-zinc-500">
-        <h1 className="text-8xl font-bold">CONTACT</h1>
+        <h2 className="text-8xl font-bold">CONTACT</h2>
       </VerticalSection>
     </main>
     </>

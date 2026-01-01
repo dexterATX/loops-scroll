@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useLenis } from '@/providers/LenisProvider'
+import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 interface ScrollToItem {
@@ -17,11 +18,9 @@ interface NavigationProps {
   heroComplete?: boolean
 }
 
-// Register plugin on client side only
+// Register plugin on client side only - synchronous to avoid race condition
 if (typeof window !== 'undefined') {
-  import('gsap').then(({ default: gsap }) => {
-    gsap.registerPlugin(ScrollTrigger)
-  })
+  gsap.registerPlugin(ScrollTrigger)
 }
 
 export default function Navigation({ scrollToData, waitForHero = false, heroComplete = false }: NavigationProps) {
@@ -32,18 +31,24 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
   const [sectionProgress, setSectionProgress] = useState<Record<string, number>>({})
   const headerRef = useRef<HTMLElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isMountedRef = useRef(true)
+  const isMountedRef = useRef(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const rafPendingRef = useRef(false)
+  const isClickScrollingRef = useRef(false)
   const { scrollTo, isReady: lenisReady } = useLenis()
 
+  // Dedicated mount effect - sets isMountedRef only once
   useEffect(() => {
     isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
+  useEffect(() => {
     // If waiting for hero animation, don't reveal until heroComplete is true
     if (waitForHero && !heroComplete) {
-      return () => {
-        isMountedRef.current = false
-      }
+      return
     }
 
     // Reveal header after mount (or after hero completes)
@@ -54,7 +59,6 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
     })
 
     return () => {
-      isMountedRef.current = false
       cancelAnimationFrame(rafId)
     }
   }, [waitForHero, heroComplete])
@@ -62,8 +66,6 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
   // Track active section based on scroll - using ScrollTrigger for horizontal sections
   useEffect(() => {
     if (!lenisReady) return
-
-    isMountedRef.current = true
 
     // Get all sections with null safety
     const sections = scrollToData
@@ -111,9 +113,14 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
       }
     }
 
-    // Add scroll listener for horizontal sections
+    // Add scroll listener for horizontal sections with rAF throttling
     const scrollHandler = () => {
-      requestAnimationFrame(updateHorizontalActive)
+      if (rafPendingRef.current) return
+      rafPendingRef.current = true
+      requestAnimationFrame(() => {
+        updateHorizontalActive()
+        rafPendingRef.current = false
+      })
     }
 
     if (horizontalSections.length > 0) {
@@ -153,7 +160,6 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
     })
 
     return () => {
-      isMountedRef.current = false
       window.removeEventListener('scroll', scrollHandler)
       observerRef.current?.disconnect()
       observerRef.current = null
@@ -174,6 +180,9 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
     }
+
+    // Set flag to prevent sync effect from overriding during click-initiated scroll
+    isClickScrollingRef.current = true
 
     // Highlight clicked section
     setClickedSection(sectionId)
@@ -200,11 +209,13 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
           const targetProgress = totalSections > 1
             ? sectionIndex / (totalSections - 1)
             : 0
-          const scrollStart = trigger.start
-          const scrollEnd = trigger.end
-          const targetScroll = scrollStart + (scrollEnd - scrollStart) * targetProgress
-
-          scrollTo(targetScroll, { duration: 1.2 })
+          const scrollStart = trigger.start ?? 0
+          const scrollEnd = trigger.end ?? 0
+          // Only scroll if we have valid start/end values
+          if (typeof scrollStart === 'number' && typeof scrollEnd === 'number' && scrollEnd > scrollStart) {
+            const targetScroll = scrollStart + (scrollEnd - scrollStart) * targetProgress
+            scrollTo(targetScroll, { duration: 1.2 })
+          }
         }
       }
     } else {
@@ -213,17 +224,22 @@ export default function Navigation({ scrollToData, waitForHero = false, heroComp
     }
 
     // Collapse text after delay, but keep highlighted
+    // Also reset the click scrolling flag after animation completes
     timeoutRef.current = setTimeout(() => {
       if (isMountedRef.current) {
         setExpandedSection('')
       }
+      isClickScrollingRef.current = false
       timeoutRef.current = null
     }, 1200)
   }, [scrollTo])
 
   // Sync clickedSection with activeSection when scrolling
   // This ensures the highlight follows the current visible section
+  // Skip during click-initiated scroll to prevent race condition
   useEffect(() => {
+    if (isClickScrollingRef.current) return
+
     setClickedSection(activeSection)
     // Clear any pending timeout when section changes via scroll
     if (timeoutRef.current) {

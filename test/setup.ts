@@ -1,11 +1,50 @@
-import { vi, beforeEach, afterEach } from 'vitest'
+import { vi, beforeEach, afterEach, type Mock } from 'vitest'
 import '@testing-library/jest-dom'
+
+// Type definitions for mocks
+export interface MockLenisInstance {
+  options: Record<string, unknown>
+  on: Mock
+  off: Mock
+  raf: Mock
+  destroy: Mock
+  scrollTo: Mock
+  start: Mock
+  stop: Mock
+  scroll: number
+  velocity: number
+  isScrolling: boolean
+  isStopped: boolean
+}
+
+export interface MockScrollTriggerInstance {
+  kill: Mock
+  refresh: Mock
+  disable: Mock
+  enable: Mock
+  animation: null
+  start: number
+  end: number
+  scrub: boolean
+  trigger: Element | null
+  progress: number
+  isActive: boolean
+  id?: string
+}
+
+export interface MockGsapContext {
+  add: Mock
+  revert: Mock
+  clean: Mock
+  kill: Mock
+  isPlaying: () => boolean
+}
 
 // Store mock instances for test access
 export const mockInstances = {
-  lenis: null as any,
-  scrollTriggers: [] as any[],
-  gsapContexts: [] as any[],
+  lenis: null as MockLenisInstance | null,
+  scrollTriggers: [] as MockScrollTriggerInstance[],
+  gsapContexts: [] as MockGsapContext[],
 }
 
 // Reset mock instances between tests
@@ -206,18 +245,20 @@ vi.mock('gsap/ScrollTrigger', () => {
 // Lenis Mock with spyable methods
 vi.mock('@studio-freight/lenis', () => {
   class MockLenis {
-    options: any
+    options: Record<string, unknown>
     on = vi.fn()
     off = vi.fn()
     raf = vi.fn()
     destroy = vi.fn()
     scrollTo = vi.fn()
+    start = vi.fn()
+    stop = vi.fn()
     scroll = 0
     velocity = 0
     isScrolling = false
     isStopped = false
 
-    constructor(options?: any) {
+    constructor(options?: Record<string, unknown>) {
       this.options = options || {}
     }
   }
@@ -227,9 +268,9 @@ vi.mock('@studio-freight/lenis', () => {
   }
 })
 
-// Mock IntersectionObserver
-class MockIntersectionObserver {
-  readonly root: Element | null = null
+// Mock IntersectionObserver implementing the interface
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | Document | null = null
   readonly rootMargin: string = ''
   readonly thresholds: ReadonlyArray<number> = []
   private callback: IntersectionObserverCallback
@@ -245,19 +286,19 @@ class MockIntersectionObserver {
     }
   }
 
-  observe = vi.fn((element: Element) => {
+  observe = vi.fn((element: Element): void => {
     this.elements.add(element)
   })
 
-  unobserve = vi.fn((element: Element) => {
+  unobserve = vi.fn((element: Element): void => {
     this.elements.delete(element)
   })
 
-  disconnect = vi.fn(() => {
+  disconnect = vi.fn((): void => {
     this.elements.clear()
   })
 
-  takeRecords = vi.fn(() => [] as IntersectionObserverEntry[])
+  takeRecords = vi.fn((): IntersectionObserverEntry[] => [])
 
   // Helper for tests to trigger intersection
   _triggerIntersection(entries: Partial<IntersectionObserverEntry>[]) {
@@ -274,16 +315,16 @@ class MockIntersectionObserver {
   }
 }
 
-global.IntersectionObserver = MockIntersectionObserver as any
+global.IntersectionObserver = MockIntersectionObserver
 
-// Mock ResizeObserver
-class MockResizeObserver {
-  observe = vi.fn()
-  unobserve = vi.fn()
-  disconnect = vi.fn()
+// Mock ResizeObserver implementing the interface
+class MockResizeObserver implements ResizeObserver {
+  observe = vi.fn((_target: Element, _options?: ResizeObserverOptions): void => {})
+  unobserve = vi.fn((_target: Element): void => {})
+  disconnect = vi.fn((): void => {})
 }
 
-global.ResizeObserver = MockResizeObserver as any
+global.ResizeObserver = MockResizeObserver
 
 // Mock requestAnimationFrame and cancelAnimationFrame
 let rafId = 0

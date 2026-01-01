@@ -38,9 +38,17 @@ export default function LenisProvider({ children }: LenisProviderProps) {
   const tickerRemoverRef = useRef<(() => void) | null>(null)
   const scrollHandlerRef = useRef<(() => void) | null>(null)
   const isMountedRef = useRef(true)
+  // Ref to always have access to the current Lenis instance (avoids stale closures)
+  const lenisRef = useRef<Lenis | null>(null)
+  // Counter to track initialization attempts (for Strict Mode race condition)
+  const initIdRef = useRef(0)
 
   useEffect(() => {
     isMountedRef.current = true
+    // Clear error state on remount
+    setError(null)
+    // Increment init ID to track this specific initialization
+    const currentInitId = ++initIdRef.current
 
     // Local variables for cleanup closure
     let localLenis: Lenis | null = null
@@ -54,8 +62,8 @@ export default function LenisProvider({ children }: LenisProviderProps) {
       import('@studio-freight/lenis')
     ])
       .then(([gsapMod, scrollTriggerMod, lenisMod]) => {
-        // Check if still mounted before proceeding
-        if (!isMountedRef.current) return
+        // Check if still mounted and this is the current init (Strict Mode race condition fix)
+        if (!isMountedRef.current || currentInitId !== initIdRef.current) return
 
         localGsap = gsapMod.default
         localScrollTrigger = scrollTriggerMod.ScrollTrigger
@@ -72,8 +80,8 @@ export default function LenisProvider({ children }: LenisProviderProps) {
           smoothWheel: true,
         })
 
-        // Check again after constructor
-        if (!isMountedRef.current) {
+        // Check again after constructor (both mounted and current init)
+        if (!isMountedRef.current || currentInitId !== initIdRef.current) {
           localLenis.destroy()
           return
         }
@@ -99,6 +107,12 @@ export default function LenisProvider({ children }: LenisProviderProps) {
           }
         }
 
+        // Add mounted check before ticker.add
+        if (!isMountedRef.current || currentInitId !== initIdRef.current) {
+          lenis.destroy()
+          return
+        }
+
         gsap.ticker.add(tickerUpdate)
         gsap.ticker.lagSmoothing(0)
 
@@ -109,6 +123,9 @@ export default function LenisProvider({ children }: LenisProviderProps) {
 
         // Start with scrolling disabled - will be enabled after hero animation
         lenis.stop()
+
+        // Store in ref for callbacks to use (avoids stale closures)
+        lenisRef.current = lenis
 
         // Set state to trigger context update - this makes lenis available to consumers
         setLenisInstance(lenis)
@@ -147,34 +164,40 @@ export default function LenisProvider({ children }: LenisProviderProps) {
         localLenis = null
       }
 
+      // Clear the ref
+      lenisRef.current = null
+
       // Note: We don't call setIsReady(false) here because component is unmounting
       // and calling setState on unmounted component is unnecessary
     }
   }, [])
 
-  // Memoized scrollTo function that uses lenis
+  // Memoized scrollTo function that uses lenisRef to avoid stale closures
   const scrollTo = useCallback((
     target: string | HTMLElement | number,
     options?: { offset?: number; duration?: number }
   ) => {
-    if (lenisInstance) {
-      lenisInstance.scrollTo(target, options)
+    // Use ref to always get current instance (avoids stale closure issues)
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(target, options)
     }
-  }, [lenisInstance])
+  }, [])
 
   // Enable scrolling (call after hero animation completes)
   const enableScroll = useCallback(() => {
-    if (lenisInstance) {
-      lenisInstance.start()
+    // Use ref to always get current instance (avoids stale closure issues)
+    if (lenisRef.current) {
+      lenisRef.current.start()
     }
-  }, [lenisInstance])
+  }, [])
 
   // Disable scrolling
   const disableScroll = useCallback(() => {
-    if (lenisInstance) {
-      lenisInstance.stop()
+    // Use ref to always get current instance (avoids stale closure issues)
+    if (lenisRef.current) {
+      lenisRef.current.stop()
     }
-  }, [lenisInstance])
+  }, [])
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo<LenisContextValue>(() => ({
