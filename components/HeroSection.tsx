@@ -69,7 +69,6 @@ export default function HeroSection({
       const firstWord = wordRefs.current[0]
       const wordHeight = firstWord?.offsetHeight ?? 150
       const totalWords = wordRefs.current.length
-      const totalHeight = wordHeight * totalWords
 
       // Final position is y=0 (centered by flexbox)
       // We need to push (totalWords - 1) times to get from start to y=0
@@ -321,13 +320,15 @@ export default function HeroSection({
       ref={containerRef}
       className="relative w-full h-full flex items-center overflow-hidden"
     >
-      {/* Background video */}
+      {/* Background video with fallback */}
       <video
         ref={videoRef}
         autoPlay
         muted
+        loop
         playsInline
-        className="absolute inset-0 w-full h-full object-cover z-0"
+        poster="/images/hero-poster.jpg"
+        className="absolute inset-0 w-full h-full object-cover z-0 bg-zinc-900"
         aria-hidden="true"
       >
         <source src="/videos/hero-bg.mp4" type="video/mp4" />

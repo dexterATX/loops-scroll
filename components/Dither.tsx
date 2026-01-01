@@ -160,9 +160,11 @@ class RetroEffectImpl extends Effect {
   }
 }
 
+// Wrap effect outside component to avoid creating new component types on each render
+const WrappedRetroEffect = wrapEffect(RetroEffectImpl)
+
 const RetroEffect = forwardRef<RetroEffectImpl, { colorNum: number; pixelSize: number }>((props, ref) => {
   const { colorNum, pixelSize } = props
-  const WrappedRetroEffect = wrapEffect(RetroEffectImpl)
   return <WrappedRetroEffect ref={ref} colorNum={colorNum} pixelSize={pixelSize} />
 })
 

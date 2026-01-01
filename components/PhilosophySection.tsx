@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -16,141 +16,16 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
 }
 
-// Subtle ember spark - tiny glowing point
-function createSubtleEmber(container: HTMLElement, index: number) {
-  const ember = document.createElement('div')
-  ember.className = 'ember-spark'
-
-  // Very small - tiny pinpoints of light (1-3px)
-  const size = 1 + Math.random() * 2
-  ember.style.width = `${size}px`
-  ember.style.height = `${size}px`
-
-  // Spawn across the stat area
-  ember.style.left = `${Math.random() * 100}%`
-  ember.style.bottom = `${Math.random() * 20}%`
-
-  container.appendChild(ember)
-
-  // Subtle animation parameters
-  const lifespan = 3 + Math.random() * 3
-  const maxHeight = 60 + Math.random() * 50
-  const drift = (Math.random() - 0.5) * 30
-  const startDelay = index * 0.2 + Math.random() * 1.5
-
-  // Simple, smooth animation
-  const tl = gsap.timeline({
-    delay: startDelay,
-    repeat: -1,
-    repeatDelay: 1 + Math.random() * 2,
-    onRepeat: () => {
-      gsap.set(ember, {
-        left: `${Math.random() * 100}%`,
-        bottom: `${Math.random() * 20}%`,
-        x: 0,
-        y: 0,
-      })
-    }
-  })
-
-  // Fade in
-  tl.fromTo(ember,
-    { opacity: 0 },
-    { opacity: 0.4 + Math.random() * 0.4, duration: 0.5, ease: 'power2.out' }
-  )
-
-  // Float up with gentle drift
-  tl.to(ember, {
-    y: -maxHeight,
-    x: drift,
-    duration: lifespan,
-    ease: 'power1.out',
-  }, 0)
-
-  // Gentle sway
-  tl.to(ember, {
-    x: `+=${(Math.random() - 0.5) * 15}`,
-    duration: 1.5,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: 2,
-  }, 0.3)
-
-  // Fade out
-  tl.to(ember, {
-    opacity: 0,
-    duration: lifespan * 0.4,
-    ease: 'power2.in',
-  }, lifespan * 0.5)
-
-  // Subtle twinkle
-  gsap.to(ember, {
-    opacity: '+=0.2',
-    duration: 0.3 + Math.random() * 0.3,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: -1,
-    delay: startDelay + Math.random(),
-  })
-
-  return { ember, timeline: tl }
-}
-
-// Floating ember component - subtle atmospheric sparks
-function FloatingEmbers({ active }: { active: boolean }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const embersRef = useRef<{ ember: HTMLDivElement; timeline: gsap.core.Timeline }[]>([])
-
-  useEffect(() => {
-    if (!active || !containerRef.current) return
-
-    const container = containerRef.current
-    const emberCount = 15 // Fewer, subtler sparks
-
-    // Clear existing
-    embersRef.current.forEach(({ ember, timeline }) => {
-      timeline.kill()
-      gsap.killTweensOf(ember)
-      ember.remove()
-    })
-    embersRef.current = []
-
-    // Create subtle sparks
-    for (let i = 0; i < emberCount; i++) {
-      embersRef.current.push(createSubtleEmber(container, i))
-    }
-
-    return () => {
-      embersRef.current.forEach(({ ember, timeline }) => {
-        timeline.kill()
-        gsap.killTweensOf(ember)
-        ember.remove()
-      })
-      embersRef.current = []
-    }
-  }, [active])
-
-  return (
-    <div
-      ref={containerRef}
-      className="absolute -inset-4 overflow-visible pointer-events-none z-10"
-      aria-hidden="true"
-    />
-  )
-}
-
-// Glowing stat component with embers
+// Glowing stat component
 function GlowingStat({
   value,
   suffix,
   label,
-  active,
   delay = 0
 }: {
   value: string
   suffix: string
   label: string
-  active: boolean
   delay?: number
 }) {
   const statRef = useRef<HTMLDivElement>(null)
@@ -159,7 +34,7 @@ function GlowingStat({
   const innerGlowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!active || !statRef.current) return
+    if (!statRef.current) return
 
     const ctx = gsap.context(() => {
       // Outer pulsing glow animation - more dramatic
@@ -237,7 +112,7 @@ function GlowingStat({
     }, statRef)
 
     return () => ctx.revert()
-  }, [active, delay])
+  }, [delay])
 
   return (
     <div ref={statRef} className="stat-item relative py-4">
@@ -254,11 +129,6 @@ function GlowingStat({
         className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-16 rounded-full blur-xl pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(239,68,68,0.18) 50%, transparent 70%)' }}
       />
-
-      {/* Floating embers - outside valueRef */}
-      <div className="absolute inset-0">
-        <FloatingEmbers active={active} />
-      </div>
 
       {/* Value with floating animation */}
       <div ref={valueRef} className="relative z-10" style={{ willChange: 'transform' }}>
@@ -309,8 +179,7 @@ export default function PhilosophySection({ onEnter }: PhilosophySectionProps) {
   const labelRef = useRef<HTMLDivElement>(null)
   const decorativeRef = useRef<HTMLDivElement>(null)
   const transitionGradientRef = useRef<HTMLDivElement>(null)
-  const [hasAnimated, setHasAnimated] = useState(false)
-  const [embersActive, setEmbersActive] = useState(false)
+  const hasAnimatedRef = useRef(false)
 
   useEffect(() => {
     if (!sectionRef.current) return
@@ -347,15 +216,14 @@ export default function PhilosophySection({ onEnter }: PhilosophySectionProps) {
       // Create entrance animation triggered by horizontal scroll progress
       const updateEntranceAnimation = () => {
         const trigger = ScrollTrigger.getById('horizontalScrollTween')
-        if (!trigger || hasAnimated) return
+        if (!trigger || hasAnimatedRef.current) return
 
         const progress = trigger.progress
 
         // With 2 sections: Hero (0-0.5), Philosophy (0.5-1)
         // Start animating when approaching Philosophy section
-        if (progress > 0.3 && !hasAnimated) {
-          setHasAnimated(true)
-          setEmbersActive(true)
+        if (progress > 0.3) {
+          hasAnimatedRef.current = true // Sync update to prevent race condition
           playEntranceAnimation()
         }
       }
@@ -488,7 +356,7 @@ export default function PhilosophySection({ onEnter }: PhilosophySectionProps) {
     }, sectionRef)
 
     return () => ctx.revert()
-  }, [hasAnimated, onEnter])
+  }, [onEnter])
 
   return (
     <section
@@ -604,27 +472,24 @@ export default function PhilosophySection({ onEnter }: PhilosophySectionProps) {
               </p>
             </div>
 
-            {/* Stats with floating ember animations */}
+            {/* Stats with glowing animations */}
             <div ref={statsRef} className="flex flex-wrap gap-8 md:gap-12 lg:gap-16">
               <GlowingStat
                 value="15"
                 suffix="+"
                 label="Years Experience"
-                active={embersActive}
                 delay={0}
               />
               <GlowingStat
                 value="7"
                 suffix="+"
                 label="Athletes Trained"
-                active={embersActive}
                 delay={0.3}
               />
               <GlowingStat
                 value="98"
                 suffix="%"
                 label="Success Rate"
-                active={embersActive}
                 delay={0.6}
               />
             </div>

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup, waitFor, act } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, cleanup, act } from '@testing-library/react'
 import LenisProvider, { useLenis } from './LenisProvider'
 import gsap from 'gsap'
 

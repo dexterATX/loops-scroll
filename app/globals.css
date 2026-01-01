@@ -370,11 +370,6 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Scroll indicator animation */
-.scroll-line {
-  will-change: transform;
-}
-
 /* Responsive adjustments for mobile */
 @media (max-width: 640px) {
   .hero-text {
@@ -444,57 +439,3 @@ body {
   }
 }
 
-/* Hero background video styles */
-.hero-video {
-  object-fit: cover;
-  pointer-events: none;
-}
-
-/* ===== SUBTLE EMBER SPARKS ===== */
-
-/* Tiny glowing spark - like fireplace embers */
-.ember-spark {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  will-change: transform, opacity;
-  background: #fbbf24;
-  box-shadow:
-    0 0 2px 0.5px rgba(251, 191, 36, 0.9),
-    0 0 4px 1px rgba(249, 115, 22, 0.6),
-    0 0 8px 2px rgba(239, 68, 68, 0.3);
-}
-
-/* Slightly brighter variant */
-.ember-spark:nth-child(3n) {
-  background: #fcd34d;
-  box-shadow:
-    0 0 2px 0.5px rgba(252, 211, 77, 0.95),
-    0 0 5px 1px rgba(251, 191, 36, 0.7),
-    0 0 10px 2px rgba(249, 115, 22, 0.35);
-}
-
-/* Warmer orange variant */
-.ember-spark:nth-child(4n) {
-  background: #fb923c;
-  box-shadow:
-    0 0 2px 0.5px rgba(251, 146, 60, 0.9),
-    0 0 4px 1px rgba(239, 68, 68, 0.5),
-    0 0 8px 2px rgba(220, 38, 38, 0.25);
-}
-
-/* Subtle red variant */
-.ember-spark:nth-child(5n) {
-  background: #f87171;
-  box-shadow:
-    0 0 2px 0.5px rgba(248, 113, 113, 0.85),
-    0 0 4px 1px rgba(239, 68, 68, 0.5),
-    0 0 6px 2px rgba(185, 28, 28, 0.25);
-}
-
-/* Accessibility: Reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .ember-spark {
-    display: none !important;
-  }
-}
